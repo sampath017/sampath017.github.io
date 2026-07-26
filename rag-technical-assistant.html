@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAG Technical Assistant & Onboarding Agent · Sampath Kovvali</title>
+  <meta name="description"
+    content="Production-grade RAG pipeline with structure-aware chunking, hybrid reranking, RBAC metadata filtering, and Ragas evaluation harness for enterprise manufacturing operations.">
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
+
+<body>
+  <div class="single-wrap">
+
+    <a class="back-link" href="index.html">← Sampath Kovvali</a>
+
+    <header>
+      <h1>RAG Technical Assistant &amp; Onboarding Agent</h1>
+    </header>
+
+    <main>
+      <p>Two distinct operational challenges for a Tier-1 automotive electronics client (via Tata Consultancy Services), one underlying architectural pattern: operations engineers required immediate, exact technical answers from thousands of scattered equipment manuals and CAD/CAM specs, while new associates needed reliable, cited guidance on complex organizational policies and security protocols.</p>
+
+      <h2 class="section-label">Ingestion &amp; Advanced Chunking Harness</h2>
+      <p>Naive fixed-character text splitting breaks tabular specs and truncates machine repair steps mid-sentence. I
+        designed a structure-aware ingestion pipeline to preserve technical layout integrity:</p>
+
+      <ul>
+        <li><strong>Structure-Aware Document Parsing:</strong> Used layout-aware PDF parsers to extract schematics,
+          tables, and nested bullet structures from complex vendor manuals without losing tabular alignment.</li>
+        <li><strong>Recursive Header-Based Splitting:</strong> Chunked documents at logical H1/H2 section boundaries
+          with a target size of <strong>512 tokens</strong> and a <strong>64-token sliding overlap</strong> to maintain
+          context continuity across technical procedures.</li>
+        <li><strong>Rich Metadata Injection:</strong> Every chunk was enriched with a structured JSON payload containing
+          document metadata:
+          <code>{doc_id, section_title, machine_model, revision_date, security_level, page_number}</code>.
+        </li>
+        <li><strong>Embedding Pipeline:</strong> Generated dense vector embeddings using Azure OpenAI
+          <code>text-embedding-3-large</code> (1,536 dimensions) and indexed vectors into ChromaDB collections with HNSW
+          index configuration for sub-10ms retrieval.</li>
+      </ul>
+
+      <h2 class="section-label">Multi-Stage Hybrid Retrieval &amp; Reranking Harness</h2>
+      <p>Finding exact component serial numbers (e.g. <code>PLC-FX3U-64MT</code>) fails with pure vector similarity. The
+        retrieval engine combines dense semantic search with sparse keyword matching:</p>
+
+      <ul>
+        <li><strong>Hybrid Search (Dense + BM25 Sparse):</strong> Queries simultaneously execute dense vector cosine
+          search in ChromaDB and BM25 sparse keyword matching over document chunks, merged via Reciprocal Rank Fusion
+          (RRF).</li>
+        <li><strong>Cross-Encoder Reranking:</strong> Initial retrieval fetches top-30 candidate chunks. A Cross-Encoder
+          reranker scores each candidate chunk against the exact query intent, selecting the top-5 highest-relevance
+          context blocks to pass to the LLM context window.</li>
+        <li><strong>Role-Based Access Control (RBAC) Filtering:</strong> For the onboarding agent, queries dynamically
+          apply metadata filters (<code>user_role == 'engineer' AND clearance_level >= 2</code>) to strictly prevent
+          unauthorized document exposure across departments.</li>
+      </ul>
+
+      <div class="flow-chart">
+        <div class="flow-node">📄 Raw PDFs / Manuals / Schematics / Policy Documents</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node">✂️ Layout Parsing &amp; Structure-Aware Chunking (512 tokens / 64 overlap)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node">🏷️ Metadata Enrichment ({doc_id, machine_model, clearance_level})</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-grid">
+          <div class="flow-node">🔍 ChromaDB Dense Vector Search (HNSW)</div>
+          <div class="flow-node">🔤 BM25 Sparse Keyword Search</div>
+        </div>
+        <div class="flow-arrow">↓ Reciprocal Rank Fusion (RRF) (Top 30 Candidates)</div>
+        <div class="flow-node primary">🎯 Cross-Encoder Reranker (Top 5 Context Chunks)</div>
+        <div class="flow-arrow">↓ (RBAC Security Filter &amp; Grounding Guardrails)</div>
+        <div class="flow-node action">🤖 Azure OpenAI (GPT-4o) → Answer with Page/Section Citations</div>
+      </div>
+
+      <h2 class="section-label">Grounding Guardrails &amp; Evaluation Harness</h2>
+      <p>In manufacturing support, a hallucinated repair step can cause physical equipment damage or line downtime. I
+        implemented strict guardrails and continuous evaluation metrics:</p>
+
+      <ul>
+        <li><strong>Strict Grounding System Prompts:</strong> Prompt constraints enforce that answers must be derived
+          <em>strictly</em> from retrieved context. If relevance score is below 0.70, the agent explicitly states
+          "Information not found in technical manuals" and routes to an on-duty engineering manager.</li>
+        <li><strong>Citation Engine:</strong> Automatically appends verifiable footnotes to every response, linking
+          directly to <code>[Doc: SMT_Line3_Manual.pdf, Page 142, Section 4.2]</code> so technicians can cross-reference
+          physical documentation.</li>
+        <li><strong>Ragas Evaluation Pipeline:</strong> Automated test harness powered by <code>Ragas</code> evaluating
+          test query sets across three core metrics:
+          <ul>
+            <li><strong>Faithfulness Score (&gt; 0.94):</strong> Verifying zero factual contradiction or hallucination
+              against source manuals.</li>
+            <li><strong>Answer Relevance (&gt; 0.92):</strong> Ensuring direct, actionable repair steps for technicians.
+            </li>
+            <li><strong>Context Precision (&gt; 0.90):</strong> Verifying minimal retrieval noise in context windows.
+            </li>
+          </ul>
+        </li>
+      </ul>
+
+      <h2 class="section-label">Operational Outcome &amp; Impact</h2>
+      <ul>
+        <li><strong>Faster Maintenance Triage:</strong> Reduced average manual lookup time for line technicians from 35
+          minutes to under 2 minutes per incident.</li>
+        <li><strong>Accelerated Onboarding:</strong> Onboarding assistant provided 100% cited answers for new hires on
+          policy, security, and manager routing, cutting onboarding support overhead by 40%.</li>
+        <li><strong>Zero High-Severity Hallucinations:</strong> Guardrails prevented incorrect machinery instruction
+          dispatches across 12+ months of production usage.</li>
+      </ul>
+
+      <p><em>Note: This is enterprise client work performed via TCS. Client identity, proprietary equipment
+          specifications, and internal company credentials have been anonymized for confidentiality.</em></p>
+    </main>
+
+    <footer>
+      <p><a href="index.html">← Back to all work</a></p>
+    </footer>
+
+  </div>
+</body>
+
+</html>

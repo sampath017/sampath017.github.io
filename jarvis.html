@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jarvis — Context-Aware Mobile Agent · Sampath Kovvali</title>
+  <meta name="description"
+    content="Personal project: A battery-first, context-aware mobile agent reasoning about physical state through edge sensor features and cloud LLM pipelines.">
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
+
+<body>
+  <div class="single-wrap">
+
+    <a class="back-link" href="index.html">← Sampath Kovvali</a>
+
+    <header>
+      <h1>Jarvis — Context-Aware Mobile Agent</h1>
+    </header>
+
+    <main>
+      <p>Jarvis is a mobile agent that tries to solve one narrow problem well: knowing what I'm actually doing,
+        physically, well enough to act on it — without killing the phone's battery or shipping raw sensor data anywhere
+        it doesn't need to go.</p>
+
+      <h2 class="section-label">The problem</h2>
+      <p>Android's built-in activity recognition only gives coarse categories — walking, in-vehicle, still. It can't
+        tell my motorcycle from a taxi, or a real stop from a red light. The obvious fix, polling the accelerometer and
+        GPS continuously, burns battery, heats the phone, and gets killed by Android's own background limits anyway. And
+        the target device — a Poco X4 Pro 5G on a Snapdragon 695 — doesn't have the headroom to run even a small
+        language model continuously in the background without hurting responsiveness and battery life.</p>
+
+      <h2 class="section-label">What I built</h2>
+      <p>A hybrid edge/cloud architecture, split so the phone only ever does cheap, deterministic work:</p>
+      <ul>
+        <li><strong>Tiered wake-up:</strong> The phone stays idle until Android's own activity recognition fires a
+          coarse transition (e.g. entering a vehicle state). Only then does anything expensive happen.</li>
+        <li><strong>Bounded on-device sensing:</strong> A strict 10-second burst of accelerometer/gyroscope data — never
+          continuous — turned into time- and frequency-domain features (FFT, RMS, signal magnitude area, dominant
+          frequency) on the device itself, then matched against a fingerprint of my own motorcycle.</li>
+        <li><strong>A stop–shop–return state machine:</strong> Riding → stopped → parked → walking → dwelling →
+          returning → resumed. A single trip stays "alive" across a stop instead of every pause looking like the end of
+          a journey.</li>
+        <li><strong>Two-tier cloud reasoning:</strong> A Tier 1 model that only gets invoked when the deterministic
+          layer can't resolve what's happening (conflicting GPS, an unfamiliar place), and a Tier 2 LangGraph-based
+          orchestrator that handles actual commands — "remind me to buy this again next time I'm here" — by pulling the
+          right context from Firebase and proposing a schema-validated function call.</li>
+        <li><strong>An on-device intent parser:</strong> alongside the sensing pipeline, a 135M-parameter model
+          (SmolLM2), LoRA-fine-tuned so reminder commands — create, update, delete, and open-ended follow-ups — parse
+          entirely offline. A first LoRA setup was badly overparameterized (rank 1280 on a 135M-parameter model); the
+          fix was a much smaller rank (16–32), attention-only target modules, a leak-free train/test data pipeline, and
+          a deterministic resolver layer that offloads ID-matching, so the model only ever has to understand language,
+          not look anything up.</li>
+      </ul>
+
+      <div class="flow-chart">
+        <div class="flow-node">📱 Android Activity Recognition</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node">⚡ 10s Bounded IMU Burst → On-Device FFT &amp; Feature Extraction</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node decision">Vehicle Fingerprint Match</div>
+        <div class="flow-grid">
+          <div class="flow-node action">High Confidence: Session State Machine Update</div>
+          <div class="flow-node">Low / Ambiguous: Tier 1 Cloud Context Reasoner (LangGraph)</div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node primary">Tier 2 Agentic Orchestrator &amp; Session State Machine</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node">🛡️ Schema-Validated Function Call</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node action">☁️ Backend (FastAPI / Cloud Run) → Firebase / Firestore</div>
+      </div>
+
+      <h2 class="section-label">Key decisions</h2>
+      <ul>
+        <li><strong>Cloud LLM over local LLM:</strong> The phone's hardware can't sustain even a 1–3B parameter model in
+          the background without hurting battery and thermals, so all semantic reasoning happens off-device — Android is
+          left to do only deterministic, time-bounded work.</li>
+        <li><strong>Raw sensor data never leaves the phone by default:</strong> Only extracted features and
+          classification results are transmitted, which keeps both the privacy footprint and the cloud bill small.</li>
+        <li><strong>The model can propose actions, not take them:</strong> Every tool call is schema-validated and
+          executed by backend code — the LLM never writes to the database directly.</li>
+        <li><strong>Simulate before you integrate:</strong> Before writing any Android code, I built a full Python
+          harness — synthetic IMU generation, FFT fingerprinting of my own Royal Enfield Hunter 350, the
+          stop-shop-return state machine, mock/LLM-backed reasoning tiers, and a SQLite CRUD backend with audit logging
+          — and validated all of it against 12 scenarios end to end, 100% pass, before committing to the real
+          integration. Catching a Nyquist aliasing bug in synthetic sensor data is a lot cheaper than catching it on a
+          phone.</li>
+        <li><strong>Firestore over LangGraph's built-in persistence:</strong> LangGraph ships Checkpointer/Store
+          primitives for cross-session memory, but neither has first-party Firestore support. Since each Cloud Run
+          invocation is stateless anyway, I hydrate state directly from Firestore at the start of every call — one clear
+          read, instead of building and maintaining an adapter layer for a persistence API that doesn't cover my
+          database natively.</li>
+      </ul>
+    </main>
+
+    <footer>
+      <p><a href="index.html">← Back to all work</a></p>
+    </footer>
+
+  </div>
+</body>
+
+</html>

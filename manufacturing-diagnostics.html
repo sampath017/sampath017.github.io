@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-Agent Diagnostics & Governance System · Sampath Kovvali</title>
+  <meta name="description"
+    content="Autonomous LangGraph multi-agent root-cause diagnostics and governance framework for enterprise manufacturing operations via TCS.">
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
+
+<body>
+  <div class="single-wrap">
+
+    <a class="back-link" href="index.html">← Sampath Kovvali</a>
+
+    <header>
+      <h1>Multi-Agent Diagnostics &amp; Governance System</h1>
+    </header>
+
+    <main>
+      <p>For a Tier-1 automotive electronics client (via Tata Consultancy Services), manufacturing operations rely on high-speed SMT assembly lines, industrial robotics, and proprietary third-party vendor machinery. When equipment faulted or produced quality defects, engineers spent hours manually cross-referencing MES (Manufacturing Execution System) logs, SCADA alarms, vendor manuals, and legacy ticketing records to pinpoint root causes.</p>
+
+      <h2 class="section-label">System Architecture: LangGraph Multi-Agent Graph</h2>
+      <p>Instead of a linear chain, I designed a stateful, graph-based multi-agent orchestration architecture built with
+        <strong>LangGraph</strong>. Agents share a centralized typed state (containing fault codes, telemetry streams,
+        document context, and hypothesis confidence metrics) and dynamically route tasks through conditional edges.</p>
+
+      <ul>
+        <li><strong>Supervisor Triage Agent:</strong> Serves as the central router. Upon receiving an automated fault
+          trigger or line stoppage alert, it parses initial SCADA event parameters and delegates sub-tasks to
+          domain-specific worker agents.</li>
+        <li><strong>MES &amp; Telemetry Log Extractor Agent:</strong> Connects to live manufacturing databases to pull
+          timestamped sensor bursts, PLC status flags, and cycle-time anomalies surrounding the failure window.</li>
+        <li><strong>Milvus Vector Retrieval Agent:</strong> Performs hybrid dense/sparse vector search over a Milvus
+          database containing thousands of pages of vendor machine manuals, maintenance schematics, and historical RCA
+          (Root Cause Analysis) reports.</li>
+        <li><strong>Root-Cause Synthesis &amp; Reflection Agent:</strong> Cross-references physical telemetry signatures
+          against technical manual instructions to generate a ranked list of failure causes. If confidence is below 85%,
+          it triggers a <em>reflection loop</em> to request targeted secondary telemetry or query broader doc
+          categories.</li>
+        <li><strong>Vendor Dispatch &amp; Action Agent:</strong> Once confidence meets thresholds, it formats a
+          structured diagnostic dossier and automatically dispatches action items to internal maintenance queues or
+          third-party vendor APIs.</li>
+      </ul>
+
+      <div class="flow-chart">
+        <div class="flow-node">⚡ Equipment Failure Event / SCADA Alert</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node primary">Supervisor Router Agent</div>
+        <div class="flow-arrow">↓ (Parallel Sub-Task Delegation)</div>
+        <div class="flow-grid">
+          <div class="flow-node">📊 MES Telemetry Log Parser</div>
+          <div class="flow-node">🔍 Milvus Vector Retrieval</div>
+          <div class="flow-node">📚 Historical RCA Knowledge</div>
+        </div>
+        <div class="flow-arrow">↓ (Shared Graph State Aggregation)</div>
+        <div class="flow-node primary">Root-Cause Synthesizer &amp; Reflection Agent</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node decision">Confidence &ge; 85%?</div>
+        <div class="flow-loopback">↩ NO: Loopback to fetch targeted secondary telemetry / doc categories</div>
+        <div class="flow-arrow">↓ YES</div>
+        <div class="flow-node primary">Agentic Governance &amp; Compliance System</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-grid">
+          <div class="flow-node action">🎫 Automated Vendor Ticket &amp; Dossier Dispatch</div>
+          <div class="flow-node action">🛡️ HITL Approval Node (PLC Patch / Config Override)</div>
+        </div>
+      </div>
+
+      <h2 class="section-label">Agentic Governance &amp; Compliance Framework</h2>
+      <p>Beyond diagnostics, industrial environments require strict regulatory compliance, configuration control, and
+        safe execution bounds. I built an <strong>Agentic Governance Framework</strong> integrated into the graph
+        execution lifecycle:</p>
+
+      <ul>
+        <li><strong>Configuration Drift &amp; Firmware Audit Agent:</strong> Continuously polls PLC parameters, machine
+          software versions, and security patch levels against baseline compliance schemas. Any unauthorized drift
+          triggers automated remediation tickets.</li>
+        <li><strong>Human-in-the-Loop (HITL) Safety Gates:</strong> For autonomous actions requiring physical machine
+          state changes (e.g. firmware updates or parameter overrides), LangGraph <code>interrupt</code> nodes pause
+          execution and generate an interactive approval card for operations managers before proceeding.</li>
+        <li><strong>Vendor SLA &amp; Communication Tracking:</strong> Automatically enriches third-party vendor tickets
+          with precise machine telemetry and manual citations, tracking response SLAs and preventing vendor-engineering
+          blame loops.</li>
+        <li><strong>Audit Trail &amp; Line Traceability:</strong> Maintains immutable execution logs of all agent
+          reasoning steps, tool calls, and human approvals for compliance reporting.</li>
+      </ul>
+
+      <h2 class="section-label">Process Mining &amp; Bottleneck Analytics</h2>
+      <p>In addition to reactive breakdown diagnostics, a secondary pipeline applies process-mining algorithms to MES
+        event streams. By analyzing transition times between assembly stations, these decision-making agents identify
+        structural micro-stoppages and starvation bottlenecks before line failure occurs.</p>
+
+      <h2 class="section-label">Quantifiable Business Impact</h2>
+      <ul>
+        <li><strong>50% Reduction in MTTR:</strong> Cut Mean Time To Repair for critical SMT assets by automating
+          root-cause identification and eliminating manual cross-system investigation.</li>
+        <li><strong>15% Throughput Improvement:</strong> Improved line throughput and reduced rework cycles by
+          identifying process bottlenecks and preventing recurring machine faults.</li>
+        <li><strong>High Diagnostic Precision:</strong> Achieved over 90% accuracy in root-cause classification,
+          reducing vendor resolution ping-pong.</li>
+      </ul>
+
+      <p><em>Note: This is enterprise client work performed via TCS. Client identity, proprietary machine parameters,
+          and internal company credentials have been anonymized for confidentiality.</em></p>
+    </main>
+
+    <footer>
+      <p><a href="index.html">← Back to all work</a></p>
+    </footer>
+
+  </div>
+</body>
+
+</html>
